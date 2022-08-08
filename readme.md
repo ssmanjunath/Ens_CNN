@@ -1,1 +1,0 @@
-Ensesmble CNN model for image classification
