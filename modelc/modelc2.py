@@ -1,5 +1,3 @@
-from lzma import FILTER_LZMA1
-from ssl import PROTOCOL_TLSv1_2
 import torch
 import torch.nn as nn
 import torch.nn.functional as f
