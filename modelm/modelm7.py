@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as f
 
-class ModelM5(nn.Module):
+class ModelM7(nn.Module):
     
     def __init__(self):
         super(ModelM5,self).__init__()
