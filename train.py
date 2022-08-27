@@ -91,4 +91,63 @@ def run(seed = 0, kernelsize = 5, epochs = 150, logdir = "tmp"):
             optimiser.step()
             g_step +=1
             ema(model,g_step)
-            
+            if batch_idx % 100 == 0:
+                print('Train Epoch: {} [{:05d}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch, batch_idx * len(data), len(train_loader.dataset),
+                    100. * batch_idx / len(train_loader), loss.item()))
+        train_loss /= len(train_loader.dataset)
+        train_accuracy = 100 *(train_corr)/len(train_loader.dataset)
+
+        model.eval()
+        ema.assign(model)
+        train_loss = 0
+        correct = 0
+        total_pred = np.zeros(0)
+        total_target = np.zeros(0)
+        with torch.no_grad():
+            with data, target in test_loader:
+                data, target = data.to(device), target.to(device,dtype=torch.int64)
+                output = model(data)
+                test_loss += F.nll_loss(output,target,reduction='sum').item()
+                pred = output.argmax(dim=1,keep_dim = True)
+                total_pred = np.append(total_pred,pred.cpu().numpy())
+                total_target = np.append(total_target,target.cpu().numpy())
+                correct += pred.eq(target.view_as(pred)).sum().item()
+            if (max_correct < correct):
+                torch.save(model.state_dict(),MODEL_FILE)
+                max_correct = correct
+                print('best accuracy! Current images:%5d'%correct)
+        ema.resume(model)
+
+        #output
+
+        test_loss /= len(test_loader.dataset)
+        test_accuracy = 100 * correct/len(test_loader.dataset)
+        best_test_accuracy = 100 * max_correct/len(test_loader.dataset)
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%) (best: {:.2f}%)\n'.format(
+            test_loss, correct, len(test_loader.dataset), test_accuracy, best_test_accuracy))
+        
+        f = open(OUTPUT_FILE, 'a')
+        f.write(" %3d %12.6f %9.3f %12.6f %9.3f %9.3f\n"%(epoch, train_loss, train_accuracy, test_loss, test_accuracy, best_test_accuracy))
+        f.close()
+
+        #update Lr
+        lr_scheduler.step()
+
+        #main
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("--seed", default=0, type=int)
+    p.add_argument("--trials", default=15, type=int)
+    p.add_argument("--epochs", default=150, type=int)    
+    p.add_argument("--kernel_size", default=5, type=int)    
+    p.add_argument("--gpu", default=0, type=int)
+    p.add_argument("--logdir", default="temp")
+    args = p.parse_args()
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+    os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu)
+    for i in range(args.trials):
+        run(p_seed = args.seed + i,
+            p_epochs = args.epochs,
+            p_kernel_size = args.kernel_size,
+            p_logdir = args.logdir)
