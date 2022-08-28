@@ -1,4 +1,3 @@
-from email.policy import default
 import sys
 import os
 import argparse
@@ -54,7 +53,7 @@ def run(seed=0 , epochs=150, Kernel_size=5, logdir='tmp'):
             test_loss += F.nll_loss(output,target,reduction='sum').item()
             pred = output.argmax(dim =1, keep_dim = True)
             correct += pred.eq(target.view_as(pred)).sum().item()
-            wrong_images.extend(np.nonzero(~pred.eq(target.view_as(pred)).cpu().numpy())[0]+(100*batch_idx)
+            wrong_images.extend(np.nonzero(~pred.eq(target.view_as(pred)).cpu().numpy())[0]+(100*batch_idx))
             
     np.savetxt("../logs/%s/wrong%03d.txt"%(logdir,seed),wrong_images,fmt="%d")
     print(len(wrong_images), wrong_images)
