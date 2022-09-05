@@ -147,7 +147,7 @@ if __name__ == "__main__":
     os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu)
     for i in range(args.trials):
-        run(p_seed = args.seed + i,
-            p_epochs = args.epochs,
-            p_kernel_size = args.kernel_size,
-            p_logdir = args.logdir)
+        run(seed = args.seed + i,
+            epochs = args.epochs,
+            kernelsize = args.kernel_size,
+            logdir = args.logdir)
